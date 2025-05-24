@@ -24,6 +24,7 @@ bool AIPlayer::move() {
   actual->movePiece(c_piece, id_piece, dice);
   return true;
 }
+
 float Minimax(const Parchis &actual, int jugador, int profundidad,
               int profundidad_max, color &c_piece, int &id_piece, int &dice,
               Heuristic *heuristic) {
@@ -92,6 +93,80 @@ float Minimax(const Parchis &actual, int jugador, int profundidad,
     return valor;
   }
 }
+
+
+float PodaAlphaBeta(const Parchis &actual, int jugador, int profundidad,
+              int profundidad_max, color &c_piece, int &id_piece, int &dice,
+              Heuristic *heuristic,float alpha ,float beta) {
+
+  if (profundidad == profundidad_max ||
+      actual.gameOver()) { // Nodo terminal o profundidad límite: llamo a la
+                           // función heurística
+    // IMPORTANTE: USAMOS EL MÉTODO evaluate AUNQUE HAYAMOS REDEFINIDO LA CLASE
+    // HEURISTIC
+    return heuristic->evaluate(actual, jugador);
+  }
+  // Comparo mi jugador con el actual de la partida para saber en qué tipo de
+  // nodo estoy
+  else if (actual.getCurrentPlayerId() == jugador) { // Nodo MAX
+    float valor = menosinf; // Inicialización lo más pequeña posible para ir
+                            // calculando el máximo
+    // Obtengo los hijos del nodo actual y los recorro
+    vector<ParchisSis> rama = actual.getChildrenList();
+    for (int i=0;i<rama.size();i++) {
+			ParchisSis hijo_i=rama[i];
+      Parchis nuevo_hijo = *hijo_i;
+      if (NodeCounter::isLimitReached()) {
+        cout << "Límite de nodos alcanzado, devolviendo el mejor nodo parcial"
+             << endl;
+        if (profundidad == 0) {
+          c_piece = hijo_i.getMovedColor();
+          id_piece = hijo_i.getMovedPieceId();
+          dice = hijo_i.getMovedDiceValue();
+        }
+        return valor;
+      }
+      // Búsqueda en profundidad (llamada recursiva)
+      float new_val =
+          PodaAlphaBeta(nuevo_hijo, jugador, profundidad + 1, profundidad_max,
+                  c_piece, id_piece, dice, heuristic,alpha,beta);
+      if (new_val > valor) {
+        // Me voy quedando con el máximo
+        valor = new_val;
+        if (profundidad == 0) {
+          // Almaceno el movimiento que me ha llevado al mejor valor (solo en la
+          // raíz)
+          c_piece = hijo_i.getMovedColor();
+          id_piece = hijo_i.getMovedPieceId();
+          dice = hijo_i.getMovedDiceValue();
+        }
+      }
+			alpha =max(alpha,valor);
+			if(alpha>=beta){break;}
+    }
+    return valor;
+  } else {                // Nodo MIN
+    float valor = masinf; // Inicialización lo más grande posible para ir
+                          // calculando el mínimo
+    // Obtengo los hijos del nodo actual y los recorro
+    ParchisBros rama = actual.getChildren();
+    for (ParchisBros::Iterator it = rama.begin(); it != rama.end(); ++it) {
+      Parchis nuevo_hijo = *it;
+      // Búsqueda en profundidad (llamada recursiva)
+      float new_val =
+          PodaAlphaBeta(nuevo_hijo, jugador, profundidad + 1, profundidad_max,
+                  c_piece, id_piece, dice, heuristic,alpha,beta);
+      // Me voy quedando con el mínimo
+      if (new_val < valor) {
+        valor = new_val;
+      }
+			beta=min(beta,valor);
+			if(alpha>=beta){break;}
+    }
+    return valor;
+  }
+}
+
 void AIPlayer::think(color &c_piece, int &id_piece, int &dice) const {
   // IMPLEMENTACIÓN INICIAL DEL AGENTE
   // Esta implementación realiza un movimiento aleatorio.
@@ -156,6 +231,11 @@ void AIPlayer::think(color &c_piece, int &id_piece, int &dice) const {
   case 0:
     valor = Minimax(*actual, jugador, 0, PROFUNDIDAD_MINIMAX, c_piece, id_piece,
                     dice, &valoracionTest);
+	break;
+	case 1:
+    valor =PodaAlphaBeta(*actual, jugador, 0, PROFUNDIDAD_MINIMAX, c_piece, id_piece,dice,&valoracionTest,masinf,menosinf);
+	break;
+
     /*
 // Mi implementación base de la poda con ValoracionTest
 valor = Poda_AlfaBeta(*actual, jugador, 0, PROFUNDIDAD_ALFABETA, c_piece,
