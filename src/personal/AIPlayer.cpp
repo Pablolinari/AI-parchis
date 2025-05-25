@@ -43,8 +43,8 @@ float Minimax(const Parchis &actual, int jugador, int profundidad,
                             // calculando el máximo
     // Obtengo los hijos del nodo actual y los recorro
     vector<ParchisSis> rama = actual.getChildrenList();
-    for (int i=0;i<rama.size();i++) {
-			ParchisSis hijo_i=rama[i];
+    for (int i = 0; i < rama.size(); i++) {
+      ParchisSis hijo_i = rama[i];
       Parchis nuevo_hijo = *hijo_i;
       if (NodeCounter::isLimitReached()) {
         cout << "Límite de nodos alcanzado, devolviendo el mejor nodo parcial"
@@ -94,10 +94,9 @@ float Minimax(const Parchis &actual, int jugador, int profundidad,
   }
 }
 
-
 float PodaAlphaBeta(const Parchis &actual, int jugador, int profundidad,
-              int profundidad_max, color &c_piece, int &id_piece, int &dice,
-              Heuristic *heuristic,float alpha ,float beta) {
+                    int profundidad_max, color &c_piece, int &id_piece,
+                    int &dice, Heuristic *heuristic, float alpha, float beta) {
 
   if (profundidad == profundidad_max ||
       actual.gameOver()) { // Nodo terminal o profundidad límite: llamo a la
@@ -113,8 +112,8 @@ float PodaAlphaBeta(const Parchis &actual, int jugador, int profundidad,
                             // calculando el máximo
     // Obtengo los hijos del nodo actual y los recorro
     vector<ParchisSis> rama = actual.getChildrenList();
-    for (int i=0;i<rama.size();i++) {
-			ParchisSis hijo_i=rama[i];
+    for (int i = 0; i < rama.size(); i++) {
+      ParchisSis hijo_i = rama[i];
       Parchis nuevo_hijo = *hijo_i;
       if (NodeCounter::isLimitReached()) {
         cout << "Límite de nodos alcanzado, devolviendo el mejor nodo parcial"
@@ -129,7 +128,7 @@ float PodaAlphaBeta(const Parchis &actual, int jugador, int profundidad,
       // Búsqueda en profundidad (llamada recursiva)
       float new_val =
           PodaAlphaBeta(nuevo_hijo, jugador, profundidad + 1, profundidad_max,
-                  c_piece, id_piece, dice, heuristic,alpha,beta);
+                        c_piece, id_piece, dice, heuristic, alpha, beta);
       if (new_val > valor) {
         // Me voy quedando con el máximo
         valor = new_val;
@@ -141,8 +140,10 @@ float PodaAlphaBeta(const Parchis &actual, int jugador, int profundidad,
           dice = hijo_i.getMovedDiceValue();
         }
       }
-			alpha =max(alpha,valor);
-			if(alpha>=beta){break;}
+      alpha = max(alpha, valor);
+      if (alpha >= beta) {
+        break;
+      }
     }
     return valor;
   } else {                // Nodo MIN
@@ -155,13 +156,15 @@ float PodaAlphaBeta(const Parchis &actual, int jugador, int profundidad,
       // Búsqueda en profundidad (llamada recursiva)
       float new_val =
           PodaAlphaBeta(nuevo_hijo, jugador, profundidad + 1, profundidad_max,
-                  c_piece, id_piece, dice, heuristic,alpha,beta);
+                        c_piece, id_piece, dice, heuristic, alpha, beta);
       // Me voy quedando con el mínimo
       if (new_val < valor) {
         valor = new_val;
       }
-			beta=min(beta,valor);
-			if(alpha>=beta){break;}
+      beta = min(beta, valor);
+      if (alpha >= beta) {
+        break;
+      }
     }
     return valor;
   }
@@ -231,35 +234,11 @@ void AIPlayer::think(color &c_piece, int &id_piece, int &dice) const {
   case 0:
     valor = Minimax(*actual, jugador, 0, PROFUNDIDAD_MINIMAX, c_piece, id_piece,
                     dice, &valoracionTest);
-	break;
-	case 1:
-    valor =PodaAlphaBeta(*actual, jugador, 0, PROFUNDIDAD_MINIMAX, c_piece, id_piece,dice,&valoracionTest,masinf,menosinf);
-	break;
-
-    /*
-// Mi implementación base de la poda con ValoracionTest
-valor = Poda_AlfaBeta(*actual, jugador, 0, PROFUNDIDAD_ALFABETA, c_piece,
-              id_piece, dice, alpha, beta, &valoracionTest);
-break;
-case 1:
-// Mi implementación definitiva con la que gano a todos los ninjas.
-valor = Poda_Final2DefinitivaAhoraSi(
-*actual, jugador, 0, PROFUNDIDAD_ALFABETA, c_piece, id_piece, dice,
-alpha, beta, &miValoracion3);
-break;
-case 2:
-// Las distintas pruebas que he realizado (primera prueba)
-valor = Poda_AlfaBeta_Mejorada(*actual, jugador, 0, PROFUNDIDAD_ALFABETA,
-                       c_piece, id_piece, dice, alpha, beta,
-                       &miValoracion1);
-break;
-case 3:
-// Las distintas pruebas que he realizado (segunda prueba)
-valor = Poda_AlfaBeta_SegundaMejora(*actual, jugador, 0,
-                            PROFUNDIDAD_ALFABETA, c_piece, id_piece,
-                            dice, alpha, beta, &miValoracion1);
-break;
-// ...*/
+    break;
+  case 1:
+    valor = PodaAlphaBeta(*actual, jugador, 0, PROFUNDIDAD_MINIMAX, c_piece,
+                          id_piece, dice, &valoracionTest, menosinf,masinf);
+    break;
   }
 }
 
