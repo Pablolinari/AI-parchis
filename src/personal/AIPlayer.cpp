@@ -301,8 +301,8 @@ float ValoracionTest::getHeuristic(const Parchis &estado, int jugador) const {
 }
 
 float Heuristica1::getH1(const Parchis &estado, int jugador) const {
-  // Heurística de prueba proporcionada para validar el funcionamiento del
-  // algoritmo de búsqueda.
+  float puntuacionjugador = 0;
+  float puntuacionoponente = 0;
 
   int ganador = estado.getWinner();
   int oponente = (jugador + 1) % 2;
@@ -317,53 +317,18 @@ float Heuristica1::getH1(const Parchis &estado, int jugador) const {
     // Colores que juega mi jugador y colores del oponente
     vector<color> my_colors = estado.getPlayerColors(jugador);
     vector<color> op_colors = estado.getPlayerColors(oponente);
+    for (int j = 0; j < my_colors.size(); j++) {
 
-    // Recorro todas las fichas de mi jugador
-    int puntuacion_jugador = 0;
-    // Recorro colores de mi jugador.
-    for (int y = 0; y < op_colors.size(); y++) {
-      for (int i = 0; i < my_colors.size(); i++) {
-        color c = my_colors[i];
-        color o = op_colors[y];
-        // Recorro las fichas de ese color.
-
-        for (int j = 0; j < num_pieces; j++) {
-          // Valoro positivamente que la ficha esté en casilla segura o meta.
-          for (int g = 0; g < num_pieces; g++) {
-
-            if (estado.distanceBoxtoBox(c, j, o, g)) {
-
-            }
-
-            if (estado.getBoard().getPiece(c, j).get_box().type == goal) {
-              puntuacion_jugador += 10;
-            } else if (estado.distanceToGoal(c, j) < 35) {
-
-              puntuacion_jugador += 5;
-            }
-          }
+      for (int i = 0; i < num_pieces; i++) {
+        if (estado.distanceToGoal(my_colors[j],i) < 60 && estado.piecesAtGoal(my_colors[j])==0) {
+					puntuacionjugador+=10;
         }
+				else if(estado.distanceToGoal(my_colors[j],i) < 40 && estado.piecesAtGoal(my_colors[j])>0){
+					puntuacionjugador+=8;
+				}
+				
       }
-
-      // Recorro todas las fichas del oponente
-      int puntuacion_oponente = 0;
-      // Recorro colores del oponente.
-      for (int i = 0; i < op_colors.size(); i++) {
-        color c = op_colors[i];
-        // Recorro las fichas de ese color.
-        for (int j = 0; j < num_pieces; j++) {
-          if (estado.isSafePiece(c, j)) {
-            // Valoro negativamente que la ficha esté en casilla segura o
-            // meta.
-            puntuacion_oponente++;
-          } else if (estado.getBoard().getPiece(c, j).get_box().type == goal) {
-            puntuacion_oponente += 5;
-          }
-        }
-      }
-
-      // Devuelvo la puntuación de mi jugador menos la puntuación del
-      // oponente.
-      return puntuacion_jugador - puntuacion_oponente;
     }
   }
+  return puntuacionjugador - puntuacionoponente;
+}
