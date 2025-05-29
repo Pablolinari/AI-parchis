@@ -12,7 +12,7 @@ protected:
 
 class Heuristica1 : public Heuristic {
 protected:
-  virtual float getH1(const Parchis &estado, int jugador) const;
+  virtual float getHeuristic(const Parchis &estado, int jugador) const;
 };
 
 

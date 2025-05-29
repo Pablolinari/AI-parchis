@@ -11,12 +11,12 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
 # se agrega la ubicacion del directorio include de sfml
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -std=c++17 -I/opt/homebrew/Cellar/sfml@2/2.6.2/include")  # Pasamos de Wall y Wextra mejor xd
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -std=c++17 -O2 -I/opt/homebrew/Cellar/sfml@2/2.6.2/include")  # Pasamos de Wall y Wextra mejor xd
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -std=c++17")  # Pasamos de Wall y Wextra mejor xd
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 
-set(CMAKE_CXX_FLAGS_DEBUG "-g")
+set(CMAKE_CXX_FLAGS_DEBUG "-g -O2")
 set(CMAKE_CXX_FLAGS_RELEASE "-O2")
 
 # Enable debug symbols by default

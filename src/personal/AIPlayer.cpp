@@ -171,6 +171,72 @@ float PodaAlphaBeta(const Parchis &actual, int jugador, int profundidad,
   }
 }
 
+float OrdenacionDemovimientos(const Parchis &actual, int jugador, int profundidad,
+                    int profundidad_max, color &c_piece, int &id_piece,
+                    int &dice, Heuristic *heuristic, float alpha, float beta) {
+
+  if (profundidad == profundidad_max ||
+      actual.gameOver()) { 
+    return heuristic->evaluate(actual, jugador);
+  }
+  else if (actual.getCurrentPlayerId() == jugador) { // Nodo MAX
+    float valor = menosinf;
+    vector<ParchisSis> rama = actual.getChildrenList();
+    for (int i = 0; i < rama.size(); i++) {
+      ParchisSis hijo_i = rama[i];
+      Parchis nuevo_hijo = *hijo_i;
+      if (NodeCounter::isLimitReached()) {
+        cout << "Límite de nodos alcanzado, devolviendo el mejor nodo parcial"
+             << endl;
+        if (profundidad == 0) {
+          c_piece = hijo_i.getMovedColor();
+          id_piece = hijo_i.getMovedPieceId();
+          dice = hijo_i.getMovedDiceValue();
+        }
+        return valor;
+      }
+      float new_val =
+          PodaAlphaBeta(nuevo_hijo, jugador, profundidad + 1, profundidad_max,
+                        c_piece, id_piece, dice, heuristic, alpha, beta);
+      if (new_val > valor) {
+        valor = new_val;
+        if (profundidad == 0) {
+          c_piece = hijo_i.getMovedColor();
+          id_piece = hijo_i.getMovedPieceId();
+          dice = hijo_i.getMovedDiceValue();
+        }
+      }
+      alpha = max(alpha, valor);
+      if (alpha >= beta) {
+        break;
+      }
+    }
+    return valor;
+  } else {                // Nodo MIN
+    float valor = masinf; // Inicialización lo más grande posible para ir
+                          // calculando el mínimo
+    // Obtengo los hijos del nodo actual y los recorro
+    ParchisBros rama = actual.getChildren();
+    for (ParchisBros::Iterator it = rama.begin(); it != rama.end(); ++it) {
+      Parchis nuevo_hijo = *it;
+      // Búsqueda en profundidad (llamada recursiva)
+      float new_val =
+          PodaAlphaBeta(nuevo_hijo, jugador, profundidad + 1, profundidad_max,
+                        c_piece, id_piece, dice, heuristic, alpha, beta);
+      // Me voy quedando con el mínimo
+      if (new_val < valor) {
+        valor = new_val;
+      }
+      beta = min(beta, valor);
+      if (alpha >= beta) {
+        break;
+      }
+    }
+    return valor;
+  }
+}
+
+
 void AIPlayer::think(color &c_piece, int &id_piece, int &dice) const {
   // IMPLEMENTACIÓN INICIAL DEL AGENTE
   // Esta implementación realiza un movimiento aleatorio.
@@ -237,8 +303,9 @@ void AIPlayer::think(color &c_piece, int &id_piece, int &dice) const {
                     dice, &valoracionTest);
     break;
   case 1:
+		Heuristica1 heu;
     valor = PodaAlphaBeta(*actual, jugador, 0, PROFUNDIDAD_ALFABETA, c_piece,
-                          id_piece, dice, &valoracionTest, menosinf, masinf);
+                          id_piece, dice, &heu, menosinf, masinf);
     break;
   }
 }
@@ -300,7 +367,7 @@ float ValoracionTest::getHeuristic(const Parchis &estado, int jugador) const {
   }
 }
 
-float Heuristica1::getH1(const Parchis &estado, int jugador) const {
+float Heuristica1::getHeuristic(const Parchis &estado, int jugador) const {
   float puntuacionjugador = 0;
   float puntuacionoponente = 0;
 
