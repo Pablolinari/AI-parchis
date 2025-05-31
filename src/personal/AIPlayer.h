@@ -66,6 +66,9 @@ public:
    * @param dice Número de dado
    */
   virtual void think(color &c_piece, int &id_piece, int &dice) const;
+  virtual void thinkAleatorio(color &c_piece, int &id_piece, int &dice) const;
+  virtual void thinkFichaMasAdelantada(color &c_piece, int &id_piece, int &dice) const;
+  virtual void thinkMejorOpcion(color &c_piece, int &id_piece, int &dice) const;
 
   /**
    * @brief Método que determina si el player es inteligente (decide el mejor
