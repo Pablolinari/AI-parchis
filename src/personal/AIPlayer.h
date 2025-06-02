@@ -15,6 +15,16 @@ protected:
   virtual float getHeuristic(const Parchis &estado, int jugador) const;
 };
 
+class Heuristica2 : public Heuristic {
+protected:
+  virtual float getHeuristic(const Parchis &estado, int jugador) const;
+};
+class HeuristicaOrden : public Heuristic {
+protected:
+  virtual float getHeuristic(const Parchis &estado, int jugador) const;
+};
+
+
 
 class AIPlayer : public Player {
 protected:
