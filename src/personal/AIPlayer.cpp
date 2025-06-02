@@ -586,14 +586,14 @@ float Heuristica2::getHeuristic(const Parchis &estado, int jugador) const {
         puntuacion +=estado.distanceToGoal(c, j);
 
         if (estado.isEatingMove()) {
-          puntuacion += 30;
+          puntuacion += 20;
         }
         if (estado.isSafePiece(c, j)) {
           puntuacion += 10;
         }
         puntuacion -= estado.piecesAtHome(c) * 5;
         if (estado.isGoalMove()) {
-          puntuacion += 15;
+          puntuacion += 25;
         }
       }
     }
@@ -603,15 +603,9 @@ float Heuristica2::getHeuristic(const Parchis &estado, int jugador) const {
         puntuacion -= 100 - estado.distanceToGoal(c, j);
 
         if (estado.isEatingMove()) {
-          puntuacion -= 30;
-        }
-        if (estado.isSafePiece(c, j)) {
-          puntuacion -= 10;
+          puntuacion -= 50;
         }
         puntuacion += estado.piecesAtHome(c) * 5;
-        if (estado.isGoalMove()) {
-          puntuacion -= 20;
-        }
       }
     }
   }
