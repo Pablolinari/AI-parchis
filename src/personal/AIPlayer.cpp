@@ -1,5 +1,6 @@
 #include "AIPlayer.h"
 #include "../../include/model/Parchis.h"
+#include "model/Attributes.h"
 #include "model/Heuristic.h"
 #include <iterator>
 #include <utility>
@@ -172,7 +173,6 @@ float PodaAlphaBeta(const Parchis &actual, int jugador, int profundidad,
     return valor;
   }
 }
-
 float OrdenacionMovimientos(const Parchis &actual, int jugador, int profundidad,
                             int profundidad_max, color &c_piece, int &id_piece,
                             int &dice, Heuristic *heuristic, Heuristic *ordenar,
@@ -267,159 +267,121 @@ float OrdenacionMovimientos(const Parchis &actual, int jugador, int profundidad,
   }
 }
 
-void AIPlayer::thinkAleatorio(color &c_piece, int &id_piece, int &dice) const {
-  // IMPLEMENTACIÓN INICIAL DEL AGENTE
-  // Esta implementación realiza un movimiento aleatorio.
-  // Se proporciona como ejemplo, pero se debe cambiar por una que realice un
-  // movimiento inteligente
-  // como lo que se muestran al final de la función.
+float PodaProbabilistica(const Parchis &actual, int jugador, int profundidad,
+                         int profundidad_max, color &c_piece, int &id_piece,
+                         int &dice, Heuristic *heuristic, float alpha,
+                         float beta, float tolerancia) {
 
-  // OBJETIVO: Asignar a las variables c_piece, id_piece, dice (pasadas por
-  // referencia) los valores,
-  // respectivamente, de:
-  // - color de ficha a mover
-  // - identificador de la ficha que se va a mover
-  // - valor del dado con el que se va a mover la ficha.
-
-  // El id de mi jugador actual.
-  int player = actual->getCurrentPlayerId();
-
-  // Vector que almacenará los dados que se pueden usar para el movimiento
-  vector<int> current_dices;
-  // Vector que almacenará los ids de las fichas que se pueden mover para el
-  // dado elegido.
-  vector<tuple<color, int>> current_pieces;
-
-  // Se obtiene el vector de dados que se pueden usar para el movimiento
-  current_dices = actual->getAvailableNormalDices(player);
-  // Elijo un dado de forma aleatoria.
-  dice = current_dices[rand() % current_dices.size()];
-
-  // Se obtiene el vector de fichas que se pueden mover para el dado elegido
-  current_pieces = actual->getAvailablePieces(player, dice);
-
-  // Si tengo fichas para el dado elegido muevo una al azar.
-  if (current_pieces.size() > 0) {
-    int random_id = rand() % current_pieces.size();
-    id_piece = get<1>(current_pieces[random_id]); // get<i>(tuple<...>) me
-                                                  // devuelve el i-ésimo
-    c_piece = get<0>(current_pieces[random_id]);  // elemento de la tupla
-  } else {
-    // Si no tengo fichas para el dado elegido, pasa turno (la macro SKIP_TURN
-    // me permite no mover).
-    id_piece = SKIP_TURN;
-    c_piece = actual->getCurrentColor(); // Le tengo que indicar mi color
-                                         // actual al pasar turno.
+  if (profundidad == profundidad_max ||
+      actual.gameOver()) { // Nodo terminal o profundidad límite: llamo a la
+                           // función heurística
+    // IMPORTANTE: USAMOS EL MÉTODO evaluate AUNQUE HAYAMOS REDEFINIDO LA CLASE
+    // HEURISTIC
+    return heuristic->evaluate(actual, jugador);
   }
-
-  // El siguiente código se proporciona como sugerencia para iniciar la
-  // implementación del agente.
-
-  float valor; // Almacena el valor con el que se etiqueta el estado tras el
-               // proceso de busqueda.
-  float alpha = menosinf,
-        beta = masinf; // Cotas iniciales de la poda AlfaBeta
-  // Llamada a la función para la poda (los parámetros son solo una
-  // sugerencia, se pueden modificar).
-  ValoracionTest valoracionTest;
-
-  // ----------------------------------------------------------------- //
-
-  // Si quiero poder manejar varios comportamientos, puedo usar la variable id
-  // del agente para usar una u otra. switch (id)
-  // {
-  // case 0:
-  //    // Mi implementación base de la poda con ValoracionTest
-  //    valor = Poda_AlfaBeta(*actual, jugador, 0, PROFUNDIDAD_ALFABETA,
-  //    c_piece, id_piece, dice, alpha, beta, &valoracionTest); break;
-  // case 1:
-  //    // Mi implementación definitiva con la que gano a todos los ninjas.
-  //    valor = Poda_Final2DefinitivaAhoraSi(*actual, jugador, 0,
-  //    PROFUNDIDAD_ALFABETA, c_piece, id_piece, dice, alpha, beta,
-  //    &miValoracion3); break;
-  // case 2:
-  //    // Las distintas pruebas que he realizado (primera prueba)
-  //    valor = Poda_AlfaBeta_Mejorada(*actual, jugador, 0,
-  //    PROFUNDIDAD_ALFABETA, c_piece, id_piece, dice, alpha, beta,
-  //    &miValoracion1); break;
-  // case 3:
-  //    // Las distintas pruebas que he realizado (segunda prueba)
-  //    valor = Poda_AlfaBeta_SegundaMejora(*actual, jugador, 0,
-  //    PROFUNDIDAD_ALFABETA, c_piece, id_piece, dice, alpha, beta,
-  //    &miValoracion1); break;
-  //  // ...
-  // }
-}
-
-void AIPlayer::thinkFichaMasAdelantada(color &c_piece, int &id_piece,
-                                       int &dice) const {
-  // Elijo el dado haciendo lo mismo que el jugador aleatorio.
-  thinkAleatorio(c_piece, id_piece, dice);
-  // Tras llamar a esta función, ya tengo en dice el número de dado que quiero
-  // u ar. Ahora, en vez de mover una ficha al azar, voy a mover (o a aplicar
-  // el dado especial a) la que esté más adelantada (equivalentemente, la más
-  // ercana a la meta).
-  int player = actual->getCurrentPlayerId();
-  vector<tuple<color, int>> current_pieces =
-      actual->getAvailablePieces(player, dice);
-  int id_ficha_mas_adelantada = -1;
-  color col_ficha_mas_adelantada = none;
-  int min_distancia_meta = 9999;
-  for (int i = 0; i < current_pieces.size(); i++) {
-    // distanceToGoal(color, id) devuelve la distancia a la meta de la ficha
-    // [id] del color que le indique.
-    color col = get<0>(current_pieces[i]);
-    int id = get<1>(current_pieces[i]);
-    int distancia_meta = actual->distanceToGoal(col, id);
-    if (distancia_meta < min_distancia_meta) {
-      min_distancia_meta = distancia_meta;
-      id_ficha_mas_adelantada = id;
-      col_ficha_mas_adelantada = col;
+  // Comparo mi jugador con el actual de la partida para saber en qué tipo de
+  // nodo estoy
+  else if (actual.getCurrentPlayerId() == jugador) { // Nodo MAX
+    float valor = menosinf; // Inicialización lo más pequeña posible para ir
+                            // calculando el máximo
+    // Obtengo los hijos del nodo actual y los recorro
+    vector<ParchisSis> rama = actual.getChildrenList();
+    for (int i = 0; i < rama.size(); i++) {
+      ParchisSis hijo_i = rama[i];
+      Parchis nuevo_hijo = *hijo_i;
+      if (NodeCounter::isLimitReached()) {
+        cout << "Límite de nodos alcanzado, devolviendo el mejor nodo parcial"
+             << endl;
+        if (profundidad == 0) {
+          c_piece = hijo_i.getMovedColor();
+          id_piece = hijo_i.getMovedPieceId();
+          dice = hijo_i.getMovedDiceValue();
+        }
+        return valor;
+      }
+      // Búsqueda en profundidad (llamada recursiva)
+      float new_val =
+          PodaAlphaBeta(nuevo_hijo, jugador, profundidad + 1, profundidad_max,
+                        c_piece, id_piece, dice, heuristic, alpha, beta);
+      if (new_val > valor) {
+        // Me voy quedando con el máximo
+        valor = new_val;
+        if (profundidad == 0) {
+          // Almaceno el movimiento que me ha llevado al mejor valor (solo en la
+          // raíz)
+          c_piece = hijo_i.getMovedColor();
+          id_piece = hijo_i.getMovedPieceId();
+          dice = hijo_i.getMovedDiceValue();
+        }
+      }
+      alpha = max(alpha, valor);
+      if (abs(beta - alpha) < tolerancia) {
+        break;
+      }
     }
-  }
-  // Si no he encontrado ninguna ficha, paso turno.
-  if (id_ficha_mas_adelantada == -1) {
-    id_piece = SKIP_TURN;
-    c_piece = actual->getCurrentColor(); // Le tengo que indicar mi color
-                                         // actual al pasar turno.
-  }
-  // En caso contrario, moveré la ficha más adelantada.
-  else {
-    id_piece = id_ficha_mas_adelantada;
-    c_piece = col_ficha_mas_adelantada;
+    return valor;
+  } else {                // Nodo MIN
+    float valor = masinf; // Inicialización lo más grande posible para ir
+                          // calculando el mínimo
+    // Obtengo los hijos del nodo actual y los recorro
+    ParchisBros rama = actual.getChildren();
+    for (ParchisBros::Iterator it = rama.begin(); it != rama.end(); ++it) {
+      Parchis nuevo_hijo = *it;
+      // Búsqueda en profundidad (llamada recursiva)
+      float new_val =
+          PodaAlphaBeta(nuevo_hijo, jugador, profundidad + 1, profundidad_max,
+                        c_piece, id_piece, dice, heuristic, alpha, beta);
+      // Me voy quedando con el mínimo
+      if (new_val < valor) {
+        valor = new_val;
+      }
+      beta = min(beta, valor);
+      if (abs(alpha - beta) < tolerancia) {
+        break;
+      }
+    }
+    return valor;
   }
 }
-void AIPlayer::thinkMejorOpcion(color &c_piece, int &id_piece,
-                                int &dice) const {}
+
 void AIPlayer::think(color &c_piece, int &id_piece, int &dice) const {
   float valor;
-  Heuristica1 heuristic;
-	Heuristica2 heuristic2;
+  ValoracionTest heuristic;
+  Heuristica1 heuristic1;
+  Heuristica2 heuristic2;
   HeuristicaOrden hordenar;
   switch (id) {
   case 0:
-    thinkAleatorio(c_piece, id_piece, dice);
-    break;
-  case 1:
-    thinkFichaMasAdelantada(c_piece, id_piece, dice);
-    break;
-  case 2:
     valor = PodaAlphaBeta(*actual, jugador, 0, PROFUNDIDAD_ALFABETA, c_piece,
                           id_piece, dice, &heuristic, menosinf, masinf);
     break;
-  case 3:
-    valor = OrdenacionMovimientos(*actual, jugador, 0, PROFUNDIDAD_ALFABETA,
-                                  c_piece, id_piece, dice, &heuristic,
-                                  &hordenar, menosinf, masinf);
-    break;
-  case 4:
+  case 1:
     valor = PodaAlphaBeta(*actual, jugador, 0, PROFUNDIDAD_ALFABETA, c_piece,
                           id_piece, dice, &heuristic2, menosinf, masinf);
     break;
-  case 5:
+  case 2:
+    valor = PodaAlphaBeta(*actual, jugador, 0, PROFUNDIDAD_ALFABETA, c_piece,
+                          id_piece, dice, &heuristic1, menosinf, masinf);
+    break;
+  case 3:
     valor = OrdenacionMovimientos(*actual, jugador, 0, PROFUNDIDAD_ALFABETA,
                                   c_piece, id_piece, dice, &heuristic2,
                                   &hordenar, menosinf, masinf);
+    break;
+  case 4:
+    valor =
+        PodaProbabilistica(*actual, jugador, 0, PROFUNDIDAD_ALFABETA, c_piece,
+                           id_piece, dice, &heuristic2, menosinf, masinf, 5);
+    break;
+  case 5:
+    valor = OrdenacionMovimientos(*actual, jugador, 0, PROFUNDIDAD_ALFABETA,
+                                  c_piece, id_piece, dice, &heuristic1,
+                                  &heuristic2, menosinf, masinf);
+    break;
+  case 6:
+    valor =
+        PodaProbabilistica(*actual, jugador, 0, PROFUNDIDAD_ALFABETA, c_piece,
+                           id_piece, dice, &heuristic1, menosinf, masinf, 5);
     break;
   }
 }
@@ -479,6 +441,68 @@ float ValoracionTest::getHeuristic(const Parchis &estado, int jugador) const {
     return puntuacion_jugador - puntuacion_oponente;
   }
 }
+float Heuristica1::getHeuristic(const Parchis &estado, int jugador) const {
+  // Heurística de prueba proporcionada para validar el funcionamiento del
+  // algoritmo de búsqueda.
+
+  int ganador = estado.getWinner();
+  int oponente = (jugador + 1) % 2;
+
+  int puntuacion_oponente = 0;
+  // Si hay un ganador, devuelvo más/menos infinito, según si he ganado yo o
+  // el oponente.
+  if (ganador == jugador) {
+    return gana;
+  } else if (ganador == oponente) {
+    return pierde;
+  } else {
+    // Colores que juega mi jugador y colores del oponente
+    vector<color> my_colors = estado.getPlayerColors(jugador);
+    vector<color> op_colors = estado.getPlayerColors(oponente);
+
+    // Recorro todas las fichas de mi jugador
+    int puntuacion_jugador = 0;
+    // Recorro colores de mi jugador.
+    for (int i = 0; i < my_colors.size(); i++) {
+      color c = my_colors[i];
+      for (int j = 0; j < num_pieces; j++) {
+        puntuacion_jugador += 100 - estado.distanceToGoal(c, j);
+        if (estado.isSafePiece(c, j)) {
+          puntuacion_jugador += 5;
+        }
+        if (estado.getBoard().getPiece(c, j).get_box().type == goal) {
+          puntuacion_jugador += 10;
+        }
+        if (estado.eatenPiece().first == c) {
+          puntuacion_oponente += 40;
+        }
+
+        puntuacion_oponente += estado.piecesAtHome(c) * 30;
+      }
+    }
+
+    // Recorro todas las fichas del oponente
+    // Recorro colores del oponente.
+    for (int i = 0; i < op_colors.size(); i++) {
+      color c = op_colors[i];
+      // Recorro las fichas de ese color.
+      for (int j = 0; j < num_pieces; j++) {
+        puntuacion_oponente += 100 - estado.distanceToGoal(c, j);
+        if (estado.isSafePiece(c, j)) {
+          puntuacion_oponente += 5;
+        }
+        if (estado.getBoard().getPiece(c, j).get_box().type == goal) {
+          puntuacion_oponente += 10;
+        }
+        if (estado.eatenPiece().first == c) {
+          puntuacion_jugador += 60;
+        }
+        puntuacion_jugador += estado.piecesAtHome(c) * 40;
+      }
+    }
+    return puntuacion_jugador - puntuacion_oponente;
+  }
+}
 float HeuristicaOrden::getHeuristic(const Parchis &estado, int jugador) const {
 
   int ganador = estado.getWinner();
@@ -497,70 +521,14 @@ float HeuristicaOrden::getHeuristic(const Parchis &estado, int jugador) const {
       color c = my_colors[i];
       for (int j = 0; j < num_pieces; j++) {
         puntuacion += 100 - estado.distanceToGoal(c, j);
-
-        if (estado.isEatingMove()) {
-          puntuacion += 20;
-        }
-
-        puntuacion -= estado.piecesAtHome(c) * 5;
+        puntuacion -= estado.piecesAtHome(c) * 20;
       }
     }
     for (int i = 0; i < op_colors.size(); i++) {
       color c = op_colors[i];
       for (int j = 0; j < num_pieces; j++) {
         puntuacion -= 100 - estado.distanceToGoal(c, j);
-
-        if (estado.isEatingMove()) {
-          puntuacion -= 20;
-        }
-        puntuacion += estado.piecesAtHome(c) * 5;
-      }
-    }
-  }
-  return puntuacion;
-}
-float Heuristica1::getHeuristic(const Parchis &estado, int jugador) const {
-
-  int ganador = estado.getWinner();
-  int oponente = (jugador + 1) % 2;
-  float puntuacion;
-
-  if (ganador == jugador) {
-    return gana;
-  } else if (ganador == oponente) {
-    return pierde;
-  } else {
-    vector<color> my_colors = estado.getPlayerColors(jugador);
-    vector<color> op_colors = estado.getPlayerColors(oponente);
-
-    for (int i = 0; i < my_colors.size(); i++) {
-      color c = my_colors[i];
-      for (int j = 0; j < num_pieces; j++) {
-        puntuacion += 100 - estado.distanceToGoal(c, j);
-
-        if (estado.isEatingMove()) {
-          puntuacion += 20;
-        }
-
-        puntuacion -= estado.piecesAtHome(c);
-        if (estado.isGoalMove()) {
-          puntuacion += 15;
-        }
-      }
-    }
-    for (int i = 0; i < op_colors.size(); i++) {
-      color c = op_colors[i];
-      for (int j = 0; j < num_pieces; j++) {
-        puntuacion -= 100 - estado.distanceToGoal(c, j);
-
-        if (estado.isEatingMove()) {
-          puntuacion -= 20;
-        }
-
-        puntuacion += estado.piecesAtHome(c);
-        if (estado.isGoalMove()) {
-          puntuacion -= 15;
-        }
+        puntuacion += estado.piecesAtHome(c) * 20;
       }
     }
   }
@@ -570,7 +538,7 @@ float Heuristica2::getHeuristic(const Parchis &estado, int jugador) const {
 
   int ganador = estado.getWinner();
   int oponente = (jugador + 1) % 2;
-  float puntuacion;
+  float poponente = 0, pjugador = 0;
 
   if (ganador == jugador) {
     return gana;
@@ -583,31 +551,30 @@ float Heuristica2::getHeuristic(const Parchis &estado, int jugador) const {
     for (int i = 0; i < my_colors.size(); i++) {
       color c = my_colors[i];
       for (int j = 0; j < num_pieces; j++) {
-        puntuacion +=estado.distanceToGoal(c, j);
+        pjugador += 100 - estado.distanceToGoal(c, j);
 
-        if (estado.isEatingMove()) {
-          puntuacion += 20;
+        if (estado.eatenPiece().first == c) {
+          poponente += 40;
         }
         if (estado.isSafePiece(c, j)) {
-          puntuacion += 10;
+          pjugador += 10;
         }
-        puntuacion -= estado.piecesAtHome(c) * 5;
-        if (estado.isGoalMove()) {
-          puntuacion += 25;
-        }
+
+        poponente += estado.piecesAtHome(c) * 40;
+        pjugador += estado.piecesAtGoal(c) * 15;
       }
     }
     for (int i = 0; i < op_colors.size(); i++) {
       color c = op_colors[i];
       for (int j = 0; j < num_pieces; j++) {
-        puntuacion -= 100 - estado.distanceToGoal(c, j);
+        poponente += 100 - estado.distanceToGoal(c, j);
 
-        if (estado.isEatingMove()) {
-          puntuacion -= 50;
+        if (estado.eatenPiece().first == c) {
+          pjugador += 60;
         }
-        puntuacion += estado.piecesAtHome(c) * 5;
+        pjugador += estado.piecesAtHome(c) * 30;
       }
     }
   }
-  return puntuacion;
+  return pjugador - poponente;
 }
