@@ -1,4 +1,8 @@
+This project is the second project of the Artificial Intelligence course. It consists of a Parchís game where I have programmed a MIN-MAX algorithm to play a modified version of the game called Parchís. The aim of the project is to implement improvements for the MIN-MAX algorithm, such as alpha-beta pruning, probabilistic pruning, and others. We have also described an effective heuristic to win against the bots provided by the professors in the course.
 # Práctica 3 de *Inteligencia Artificial*, curso 2024/2025
+
+
+
 
 Si has realizado la práctica 2, y tienes la clave SSH configurada, puedes ir directamente al [paso 2](#2.-crear-tu-copia-personal-del-repositorio-de-la-asignatura).
 
